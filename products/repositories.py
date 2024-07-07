@@ -1,5 +1,5 @@
 from .models import Product, ProductImage
-# 
+
 class ProductRepository:
     def create(self, product_data):
         return Product.objects.create(**product_data)
