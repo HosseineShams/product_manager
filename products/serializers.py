@@ -8,7 +8,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
     def validate_image(self, value):
-        if value.size > 2 * 1024 * 1024:  # Check the size of the image
+        if value.size > 2 * 1024 * 1024:  
             raise serializers.ValidationError("Each image must not exceed 2 MB.")
         return value
 
@@ -20,7 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'price', 'description', 'images']
 
     def validate_images(self, data):
-        if len(data) > 5:  # Check the number of images
+        if len(data) > 5:  
             raise serializers.ValidationError("No more than 5 images can be uploaded.")
         return data
 
@@ -30,7 +30,6 @@ class ProductSerializer(serializers.ModelSerializer):
         if len(images_data_files) > 5:
             raise serializers.ValidationError({"images": "No more than 5 images can be uploaded."})
         
-        # Explicitly validate each image
         for image_file in images_data_files:
             serializer = ProductImageSerializer(data={'image': image_file})
             if not serializer.is_valid():
@@ -43,7 +42,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         images_data = validated_data.pop('images', [])
         with UnitOfWork() as uow:
-            validated_data['owner'] = self.context['request'].user  # Ensuring owner is set
+            validated_data['owner'] = self.context['request'].user 
             product = uow.product_repository.create(validated_data)
             for image_data in images_data:
                 uow.product_image_repository.create(product, {'image': image_file})
@@ -54,7 +53,7 @@ class ProductSerializer(serializers.ModelSerializer):
         images_data = validated_data.pop('images', [])
         with UnitOfWork() as uow:
             product = uow.product_repository.update(instance, validated_data)
-            uow.product_image_repository.delete_by_product(instance)  # Clear existing images
+            uow.product_image_repository.delete_by_product(instance) 
             for image_data in images_data:
                 uow.product_image_repository.create(instance, {'image': image_data})
             uow.commit()
