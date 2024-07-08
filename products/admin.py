@@ -3,17 +3,17 @@ from .models import Product, ProductImage
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
-    extra = 1  # Controls how many extra rows are shown for empty new entries
-    max_num = 5  # Maximum number of images allowed
+    extra = 1  
+    max_num = 5 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('title', 'price', 'description')  
-    search_fields = ('title', 'description')  
-    inlines = [ProductImageInline] 
+    list_display = ('title', 'price', 'description', 'owner')
+    search_fields = ('title', 'description')
+    inlines = [ProductImageInline]
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'price', 'description')
+            'fields': ('title', 'price', 'description', 'owner')
         }),
         ('Advanced options', {
             'classes': ('collapse',),
@@ -21,4 +21,17 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
 
+    def save_model(self, request, obj, form, change):
+        if not obj.owner_id: 
+            obj.owner = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(owner=request.user)
+
 admin.site.register(Product, ProductAdmin)
+admin.site.register(ProductImage)  
+    
