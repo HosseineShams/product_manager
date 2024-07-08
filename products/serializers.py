@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Product, ProductImage
 from .unit_of_work import UnitOfWork
+from django.core.files.uploadedfile import UploadedFile
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,7 +9,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image']
 
     def validate_image(self, value):
-        if value.size > 2 * 1024 * 1024: 
+        if isinstance(value, UploadedFile) and value.size > 2 * 1024 * 1024: 
             raise serializers.ValidationError("Each image must not exceed 2 MB.")
         return value
 
@@ -30,8 +31,9 @@ class ProductSerializer(serializers.ModelSerializer):
         if len(image_data_files) > 5:
             raise serializers.ValidationError({"images": "No more than 5 images can be uploaded."})
 
+        # Additional validation to check image sizes
         for image_file in image_data_files:
-            if image_file.size > 2 * 1024 * 1024:
+            if isinstance(image_file, UploadedFile) and image_file.size > 2 * 1024 * 1024:
                 raise serializers.ValidationError({"images": "Each image must not exceed 2 MB."})
 
         validated_data = super().to_internal_value({key: value for key, value in data.items() if key != 'images'})
